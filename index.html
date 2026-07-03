@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malayalam News Live Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --card-hover-border: rgba(239, 68, 68, 0.4);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --accent: #ef4444;
+            --accent-glow: rgba(239, 68, 68, 0.25);
+            --success: #10b981;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(239, 68, 68, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%);
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .logo-area {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .live-pulse {
+            width: 12px;
+            height: 12px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 0 var(--accent-glow);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            background: linear-gradient(to right, #ffffff, #9ca3af, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.75rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        /* Search & Filter Controls */
+        .controls {
+            margin-bottom: 2.5rem;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .search-wrapper {
+            position: relative;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            border-radius: 50px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: var(--transition);
+            outline: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+        }
+
+        /* Channel Card styling */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: var(--transition);
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+            height: 250px;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            transform: scaleX(0);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--card-hover-border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(239, 68, 68, 0.05);
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .channel-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+        }
+
+        .viewer-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 0.25rem 0.6rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .viewer-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        .card-body {
+            flex-grow: 1;
+            margin-bottom: 1.5rem;
+        }
+
+        .stream-title {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-weight: 400;
+        }
+
+        .card-footer {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-watch {
+            flex-grow: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            padding: 0.85rem 1rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-watch:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .btn-external {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            padding: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .btn-external:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-external svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+
+        .btn-watch svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        /* Empty state style */
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            background: var(--card-bg);
+            border: 1px dashed var(--card-border);
+            border-radius: 20px;
+            display: none;
+        }
+
+        /* Modal Player Styling */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 10, 18, 0.9);
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 900px;
+            background: #111827;
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 1.75rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .modal-title-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .modal-action-btn {
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .modal-action-btn:hover {
+            text-decoration: underline;
+        }
+
+        .modal-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .modal-close {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent);
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            h1 {
+                font-size: 2rem;
+            }
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .modal-content {
+                border-radius: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-area">
+                <span class="live-pulse"></span>
+                <span style="font-weight: 600; letter-spacing: 0.1em; color: var(--accent); font-size: 0.85rem; text-transform: uppercase;">In-App Playback</span>
+            </div>
+            <h1>Malayalam News Channels</h1>
+            <p class="subtitle">Stream live news channels directly without leaving the dashboard</p>
+        </header>
+
+        <div class="controls">
+            <div class="search-wrapper">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search channels or keywords...">
+            </div>
+        </div>
+
+        <div class="grid" id="channelsGrid">
+            <!-- REPORTER LIVE -->
+            <div class="card" data-channel="REPORTER LIVE" data-title="Reporter TV Live 24x7 | Malayalam News Today | Kerala Breaking News Live | HD News Streaming">
+                <div class="card-header">
+                    <span class="channel-name">REPORTER LIVE</span>
+                    <div class="viewer-badge">
+                        <span class="viewer-dot"></span>
+                        <span>24,600 Live</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="stream-title">Reporter TV Live 24x7 | Malayalam News Today | Kerala Breaking News Live | HD News Streaming</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn-watch" onclick="playVideo('nObUcHKZEGY', 'REPORTER LIVE')">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        Play Here
+                    </button>
+                    <a href="https://www.youtube.com/watch?v=nObUcHKZEGY" target="_blank" class="btn-external" title="Open directly on YouTube">
+                        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- asianetnews -->
+            <div class="card" data-channel="asianetnews" data-title="Asianet News Live | Malayalam Live News | Kerala News Updates | Breaking News | HD News Streaming">
+                <div class="card-header">
+                    <span class="channel-name">Asianet News</span>
+                    <div class="viewer-badge">
+                        <span class="viewer-dot"></span>
+                        <span>12,183 Live</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="stream-title">Asianet News Live | Malayalam Live News | Kerala News Updates | Breaking News | HD News Streaming</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn-watch" onclick="playVideo('s0LLVQeMmtU', 'Asianet News')">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        Play Here
+                    </button>
+                    <a href="https://www.youtube.com/watch?v=s0LLVQeMmtU" target="_blank" class="btn-external" title="Open directly on YouTube">
+                        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 24 News -->
+            <div class="card" data-channel="24 News" data-title="24 News Live TV | Live News Updates | Malayalam News Live | HD Live Streaming | 24 News">
+                <div class="card-header">
+                    <span class="channel-name">24 News</span>
+                    <div class="viewer-badge">
+                        <span class="viewer-dot"></span>
+                        <span>9,031 Live</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="stream-title">24 News Live TV | Live News Updates | Malayalam News Live | HD Live Streaming | 24 News</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn-watch" onclick="playVideo('1wECsnGZcfc', '24 News')">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        Play Here
+                    </button>
+                    <a href="https://www.youtube.com/watch?v=1wECsnGZcfc" target="_blank" class="btn-external" title="Open directly on YouTube">
+                        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- BIGTV24X7 -->
+            <div class="card" data-channel="BIGTV24X7" data-title="BigTV Official Live | Malayalam News Live | BIG TV MALAYALAM | Justice For Nurses | Nurses Strike">
+                <div class="card-header">
+                    <span class="channel-name">BIG TV</span>
+                    <div class="viewer-badge">
+                        <span class="viewer-dot"></span>
+                        <span>6,951 Live</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="stream-title">BigTV Official Live | Malayalam News Live | BIG TV MALAYALAM | Justice For Nurses | Nurses Strike</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn-watch" onclick="playVideo('HRvY9DoJ_qI', 'BIG TV')">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        Play Here
+                    </button>
+                    <a href="https://www.youtube.com/watch?v=HRvY9DoJ_qI" target="_blank" class="btn-external" title="Open directly on YouTube">
+                        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- News Malayalam 24x7 -->
+            <div class="card" data-channel="News Malayalam 24x7" data-title="News Malayalam 24x7 Live | ന്യൂസ് മലയാളം 24x7 | Kerala Breaking News | Malayalam News">
+                <div class="card-header">
+                    <span class="channel-name">News Malayalam 24x7</span>
+                    <div class="viewer-badge">
+                        <span class="viewer-dot"></span>
+                        <span>4,779 Live</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="stream-title">News Malayalam 24x7 Live | ന്യൂസ് മലയാളം 24x7 | Kerala Breaking News | Malayalam News</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn-watch" onclick="playVideo('P9MITjM250c', 'News Malayalam 24x7')">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        Play Here
+                    </button>
+                    <a href="https://www.youtube.com/watch?v=P9MITjM250c" target="_blank" class="btn-external" title="Open directly on YouTube">
+                        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Manorama News -->
+            <div class="card" data-channel="Manorama News" data-title="Manorama News Live | Malayalam News Live | Fifa World Cup | Liquor Policy | Latest News">
+                <div class="card-header">
+                    <span class="channel-name">Manorama News</span>
+                    <div class="viewer-badge">
+                        <span class="viewer-dot"></span>
+                        <span>1,990 Live</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="stream-title">Manorama News Live | Malayalam News Live | Fifa World Cup | Liquor Policy | Latest News</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn-watch" onclick="playVideo('tgBTspqA5nY', 'Manorama News')">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        Play Here
+                    </button>
+                    <a href="https://www.youtube.com/watch?v=tgBTspqA5nY" target="_blank" class="btn-external" title="Open directly on YouTube">
+                        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mathrubhumi News -->
+            <div class="card" data-channel="Mathrubhumi News" data-title="Mathrubhumi News Live | Malayalam News Live | Kerala News Live | Breaking News Today">
+                <div class="card-header">
+                    <span class="channel-name">Mathrubhumi News</span>
+                    <div class="viewer-badge">
+                        <span class="viewer-dot"></span>
+                        <span>986 Live</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="stream-title">Mathrubhumi News Live | Malayalam News Live | Kerala News Live | Breaking News Today</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn-watch" onclick="playVideo('RbxEftGN584', 'Mathrubhumi News')">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        Play Here
+                    </button>
+                    <a href="https://www.youtube.com/watch?v=RbxEftGN584" target="_blank" class="btn-external" title="Open directly on YouTube">
+                        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Kairali News -->
+            <div class="card" data-channel="Kairali News" data-title="Kairali News Live | കൈരളി ന്യൂസ് ലൈവ് | Malayalam News Live | Kerala News LIVE Updates">
+                <div class="card-header">
+                    <span class="channel-name">Kairali News</span>
+                    <div class="viewer-badge">
+                        <span class="viewer-dot"></span>
+                        <span>813 Live</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="stream-title">Kairali News Live | കൈരളി ന്യൂസ് ലൈവ് | Malayalam News Live | Kerala News LIVE Updates</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn-watch" onclick="playVideo('yiiqRHY1Bl8', 'Kairali News')">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        Play Here
+                    </button>
+                    <a href="https://www.youtube.com/watch?v=yiiqRHY1Bl8" target="_blank" class="btn-external" title="Open directly on YouTube">
+                        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- MediaoneTV Live -->
+            <div class="card" data-channel="MediaoneTV Live" data-title="MediaOne TV Live | Malayalam News Live | Kerala News Live | Breaking News Today | 24x7 Live">
+                <div class="card-header">
+                    <span class="channel-name">MediaOne TV</span>
+                    <div class="viewer-badge">
+                        <span class="viewer-dot"></span>
+                        <span>793 Live</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="stream-title">MediaOne TV Live | Malayalam News Live | Kerala News Live | Breaking News Today | 24x7 Live</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn-watch" onclick="playVideo('-8d8-c0yvyU', 'MediaOne TV')">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        Play Here
+                    </button>
+                    <a href="https://www.youtube.com/watch?v=-8d8-c0yvyU" target="_blank" class="btn-external" title="Open directly on YouTube">
+                        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Janam TV -->
+            <div class="card" data-channel="Janam TV" data-title="Janam TV News Live | ജനം ടിവി ലൈവ് | HD Streaming | Janam Live | Janam News | Malayalam News Live TV">
+                <div class="card-header">
+                    <span class="channel-name">Janam TV</span>
+                    <div class="viewer-badge">
+                        <span class="viewer-dot"></span>
+                        <span>454 Live</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="stream-title">Janam TV News Live | ജനം ടിവി ലൈവ് | HD Streaming | Janam Live | Janam News | Malayalam News Live TV</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn-watch" onclick="playVideo('T9Ol2JHqKlM', 'Janam TV')">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        Play Here
+                    </button>
+                    <a href="https://www.youtube.com/watch?v=T9Ol2JHqKlM" target="_blank" class="btn-external" title="Open directly on YouTube">
+                        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- News18 Kerala -->
+            <div class="card" data-channel="News18 Kerala" data-title="News18 Kerala 24x7 LIVE | US-Iran War | Operation Toofan |Swetha Menon |Amma Association">
+                <div class="card-header">
+                    <span class="channel-name">News18 Kerala</span>
+                    <div class="viewer-badge">
+                        <span class="viewer-dot"></span>
+                        <span>107 Live</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="stream-title">News18 Kerala 24x7 LIVE | US-Iran War | Operation Toofan |Swetha Menon |Amma Association</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn-watch" onclick="playVideo('7Y-MMzEcjeA', 'News18 Kerala')">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        Play Here
+                    </button>
+                    <a href="https://www.youtube.com/watch?v=7Y-MMzEcjeA" target="_blank" class="btn-external" title="Open directly on YouTube">
+                        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                </div>
+            </div>
+
+            <div class="no-results" id="noResults">
+                No channels found matching that search.
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Stream Modal Window -->
+    <div class="modal" id="playerModal" onclick="closeVideo()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title-wrapper">
+                    <span class="modal-title" id="modalTitle">Live Stream</span>
+                    <a href="#" target="_blank" id="modalExternalLink" class="modal-action-btn">Open on YouTube ↗</a>
+                </div>
+                <div class="modal-controls">
+                    <button class="modal-close" onclick="closeVideo()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="video-container">
+                <iframe id="videoPlayer" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const cards = document.querySelectorAll('.card');
+        const noResults = document.getElementById('noResults');
+        const modal = document.getElementById('playerModal');
+        const player = document.getElementById('videoPlayer');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalExternalLink = document.getElementById('modalExternalLink');
+
+        // Search Filter
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const channel = card.getAttribute('data-channel').toLowerCase();
+                const title = card.getAttribute('data-title').toLowerCase();
+
+                if (channel.includes(query) || title.includes(query)) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0) {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+            }
+        });
+
+        // Open Modal and Play Video
+        function playVideo(videoId, channelName) {
+            modalTitle.textContent = `${channelName} - Live Stream`;
+            modalExternalLink.href = `https://www.youtube.com/watch?v=${videoId}`;
+            
+            // Clean URL query parameters to avoid YouTube Widget configuration errors (like Error 153)
+            player.src = `https://www.youtube.com/embed/${videoId}`;
+            
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Stop page scrolling
+        }
+
+        // Close Modal
+        function closeVideo() {
+            modal.classList.remove('active');
+            player.src = ""; // Clear src to stop video audio
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+
+        // Escape Key to Close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeVideo();
+            }
+        });
+    </script>
+</body>
+</html>
