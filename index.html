@@ -769,8 +769,8 @@
             modalTitle.textContent = `${channelName} - Live Stream`;
             modalExternalLink.href = `https://www.youtube.com/watch?v=${videoId}`;
             
-            // Clean URL query parameters to avoid YouTube Widget configuration errors (like Error 153)
-            player.src = `https://www.youtube.com/embed/${videoId}`;
+            // Start muted so browsers allow autoplay from the user's click.
+            player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=o&playsinline=1&rel=0`;
             
             modal.classList.add('active');
             document.body.style.overflow = 'hidden'; // Stop page scrolling
