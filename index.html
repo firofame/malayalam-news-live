@@ -174,45 +174,26 @@
             fill: white;
         }
 
-        .now-playing {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 12px;
-            align-items: center;
-            padding: 14px;
-        }
-
-        .now-kicker {
-            color: var(--amber);
-            font-family: "Sora", sans-serif;
-            font-size: 0.7rem;
-            font-weight: 800;
-            letter-spacing: 0;
-            text-transform: uppercase;
-        }
-
-        .now-title {
-            margin-top: 2px;
-            font-size: 1.08rem;
-            font-weight: 700;
-            line-height: 1.18;
-        }
-
         .youtube-link {
-            width: 46px;
-            height: 46px;
+            width: 42px;
+            height: 42px;
             display: inline-grid;
             place-items: center;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            border-radius: 16px;
+            border: 0;
+            border-radius: 50%;
             color: var(--ink);
-            background: rgba(255, 255, 255, 0.07);
+            background: rgba(255, 255, 255, 0.1);
             text-decoration: none;
+            transition: background 0.2s ease;
+        }
+
+        .youtube-link:hover {
+            background: rgba(255, 255, 255, 0.18);
         }
 
         .youtube-link svg {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             fill: none;
             stroke: currentColor;
             stroke-width: 2.2;
@@ -220,65 +201,7 @@
             stroke-linejoin: round;
         }
 
-        .search-strip {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            margin: 14px -14px 0;
-            padding: 10px 14px 12px;
-            background: linear-gradient(180deg, rgba(7, 9, 15, 0.96), rgba(7, 9, 15, 0.74));
-            backdrop-filter: blur(18px);
-        }
 
-        .search-box {
-            position: relative;
-        }
-
-        .search-box svg {
-            position: absolute;
-            top: 50%;
-            left: 15px;
-            width: 19px;
-            height: 19px;
-            color: var(--muted);
-            transform: translateY(-50%);
-            pointer-events: none;
-        }
-
-        .search-input {
-            width: 100%;
-            min-height: 52px;
-            padding: 0 48px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 18px;
-            outline: none;
-            color: var(--ink);
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-        }
-
-        .search-input::placeholder {
-            color: rgba(216, 226, 242, 0.62);
-        }
-
-        .clear-search {
-            position: absolute;
-            top: 50%;
-            right: 7px;
-            width: 38px;
-            height: 38px;
-            display: none;
-            place-items: center;
-            border: 0;
-            border-radius: 13px;
-            color: var(--soft);
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-50%);
-        }
-
-        .clear-search.visible {
-            display: grid;
-        }
 
         .rail {
             display: flex;
@@ -336,8 +259,8 @@
                 0 -4px 30px rgba(0, 0, 0, 0.4),
                 0 8px 32px rgba(0, 0, 0, 0.45),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            min-width: 220px;
-            max-width: 320px;
+            min-width: 260px;
+            max-width: 360px;
         }
 
         .fab-channel-name {
@@ -357,7 +280,7 @@
         .fab-controls {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
 
         /* Shared button base */
@@ -515,24 +438,10 @@
                     </div>
                 </div>
             </div>
-            <div class="now-playing">
-                <div>
-                    <div class="now-kicker">On air</div>
-                    <div class="now-title" id="nowTitle">Reporter Live</div>
-                </div>
-                <a class="youtube-link" id="nowExternal" href="https://www.youtube.com/watch?v=nObUcHKZEGY" target="_blank" rel="noreferrer" aria-label="Open current stream on YouTube">
-                    <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                </a>
-            </div>
+
         </section>
 
-        <section class="search-strip" aria-label="Channel search">
-            <div class="search-box">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="m21 21-4.35-4.35" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
-                <input class="search-input" id="searchInput" type="search" placeholder="Search channels" autocomplete="off">
-                <button class="clear-search" id="clearSearch" type="button" aria-label="Clear search">x</button>
-            </div>
-        </section>
+
 
         <nav class="rail" id="quickRail" aria-label="Quick channel list"></nav>
 
@@ -556,6 +465,9 @@
                     <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm10-12v12h2V6h-2z"></path></svg>
                     <span class="fab-ripple"></span>
                 </button>
+                <a class="youtube-link" id="fabExternal" href="https://www.youtube.com/watch?v=nObUcHKZEGY" target="_blank" rel="noreferrer" aria-label="Open on YouTube">
+                    <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                </a>
             </div>
         </div>
     </div>
@@ -576,13 +488,11 @@
         ];
 
         const quickRail = document.getElementById("quickRail");
-        const searchInput = document.getElementById("searchInput");
-        const clearSearch = document.getElementById("clearSearch");
+
         const videoShell = document.getElementById("videoShell");
         const poster = document.getElementById("poster");
-        const nowTitle = document.getElementById("nowTitle");
-        const nowExternal = document.getElementById("nowExternal");
         const clock = document.getElementById("clock");
+        const fabExternal = document.getElementById("fabExternal");
         let activeVideoId = channels[0].videoId;
 
         function youtubeWatchUrl(videoId) {
@@ -597,8 +507,7 @@
             if (!channel) return;
 
             activeVideoId = channel.videoId;
-            nowTitle.textContent = channel.display;
-            nowExternal.href = youtubeWatchUrl(channel.videoId);
+            fabExternal.href = youtubeWatchUrl(channel.videoId);
             videoShell.innerHTML = `<iframe title="${channel.display} live stream" src="${youtubeEmbedUrl(channel.videoId)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
             renderRail();
 
@@ -608,19 +517,11 @@
         }
 
         function renderRail() {
-            const query = searchInput.value.trim().toLowerCase();
-            const filtered = channels.filter(channel => {
-                const haystack = `${channel.display} ${channel.title}`.toLowerCase();
-                return haystack.includes(query);
-            });
-
-            quickRail.innerHTML = filtered.map(channel => `
+            quickRail.innerHTML = channels.map(channel => `
                 <button class="chip ${channel.videoId === activeVideoId ? "active" : ""}" type="button" data-video-id="${channel.videoId}">
                     ${channel.display}
                 </button>
             `).join("");
-
-            clearSearch.classList.toggle("visible", query.length > 0);
         }
 
         function findChannel(videoId) {
@@ -642,15 +543,7 @@
             playChannel(findChannel(button.dataset.videoId));
         });
 
-        searchInput.addEventListener("input", () => {
-            renderRail();
-        });
 
-        clearSearch.addEventListener("click", () => {
-            searchInput.value = "";
-            searchInput.focus();
-            renderRail();
-        });
 
         renderRail();
         updateClock();
@@ -676,9 +569,12 @@
                 fabBtn.classList.remove("is-playing");
                 fabBtn.setAttribute("aria-label", "Play stream");
             }
-            // Update channel name in transport bar
+            // Update channel name and YouTube link in transport bar
             const ch = findChannel(activeVideoId);
-            if (ch) fabChannelName.textContent = ch.display;
+            if (ch) {
+                fabChannelName.textContent = ch.display;
+                fabExternal.href = youtubeWatchUrl(ch.videoId);
+            }
         }
 
         function triggerRipple(btn) {
