@@ -282,19 +282,12 @@
 
         .rail {
             display: flex;
+            flex-wrap: wrap;
             gap: 9px;
-            overflow-x: auto;
-            margin: 0 -14px;
-            padding: 11px 14px 10px;
-            scrollbar-width: none;
-        }
-
-        .rail::-webkit-scrollbar {
-            display: none;
+            padding: 11px 0 10px;
         }
 
         .chip {
-            flex: 0 0 auto;
             min-height: 38px;
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 999px;
@@ -312,168 +305,7 @@
             background: var(--mint);
         }
 
-        .feed {
-            display: grid;
-            gap: 12px;
-            padding-top: 8px;
-        }
 
-        .channel-card {
-            display: grid;
-            grid-template-columns: 105px minmax(0, 1fr);
-            gap: 12px;
-            align-items: stretch;
-            min-height: 120px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius);
-            background: rgba(17, 23, 34, 0.84);
-            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
-            overflow: hidden;
-        }
-
-        .channel-card.active {
-            border-color: rgba(255, 75, 62, 0.62);
-            background: linear-gradient(135deg, rgba(255, 75, 62, 0.16), rgba(23, 31, 44, 0.94));
-        }
-
-        .thumb {
-            position: relative;
-            min-height: 120px;
-            background: #0b1018 center / cover;
-        }
-
-        .thumb::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.46));
-        }
-
-        .live-pill {
-            position: absolute;
-            left: 8px;
-            bottom: 8px;
-            z-index: 1;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            height: 24px;
-            padding: 0 8px;
-            border-radius: 999px;
-            color: white;
-            background: rgba(255, 75, 62, 0.92);
-            font-family: "Sora", sans-serif;
-            font-size: 0.64rem;
-            font-weight: 800;
-        }
-
-        .card-copy {
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            padding: 11px 11px 11px 0;
-        }
-
-        .card-topline {
-            display: flex;
-            align-items: start;
-            justify-content: space-between;
-            gap: 8px;
-        }
-
-        .channel-name {
-            min-width: 0;
-            font-size: 1rem;
-            font-weight: 800;
-            line-height: 1.12;
-            overflow-wrap: anywhere;
-        }
-
-        .viewer-count {
-            flex: 0 0 auto;
-            color: var(--mint);
-            font-family: "Sora", sans-serif;
-            font-size: 0.68rem;
-            font-weight: 800;
-        }
-
-        .stream-title {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            margin: 7px 0 10px;
-            color: var(--muted);
-            font-size: 0.82rem;
-            line-height: 1.28;
-        }
-
-        .card-actions {
-            display: grid;
-            grid-template-columns: 1fr 42px;
-            gap: 8px;
-            margin-top: auto;
-        }
-
-        .play-button,
-        .open-button {
-            min-height: 42px;
-            border: 0;
-            border-radius: 14px;
-            cursor: pointer;
-        }
-
-        .play-button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 7px;
-            color: white;
-            background: linear-gradient(135deg, var(--hot), var(--hot-deep));
-            font-family: "Sora", sans-serif;
-            font-size: 0.78rem;
-            font-weight: 800;
-            box-shadow: 0 10px 20px rgba(255, 75, 62, 0.24);
-        }
-
-        .play-button svg {
-            width: 15px;
-            height: 15px;
-            fill: currentColor;
-        }
-
-        .open-button {
-            display: inline-grid;
-            place-items: center;
-            color: var(--soft);
-            background: rgba(255, 255, 255, 0.08);
-            text-decoration: none;
-        }
-
-        .open-button svg {
-            width: 18px;
-            height: 18px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2.2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        .empty {
-            display: none;
-            margin-top: 10px;
-            padding: 28px 18px;
-            border: 1px dashed rgba(255, 255, 255, 0.18);
-            border-radius: var(--radius);
-            color: var(--muted);
-            text-align: center;
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .empty.visible {
-            display: block;
-        }
 
         @media (min-width: 620px) {
             body {
@@ -526,8 +358,7 @@
         </section>
 
         <nav class="rail" id="quickRail" aria-label="Quick channel list"></nav>
-        <section class="feed" id="feed" aria-label="Live channels"></section>
-        <div class="empty" id="emptyState">No channels found.</div>
+
     </main>
 
     <script>
@@ -545,11 +376,9 @@
             { name: "News18 Kerala", display: "News18 Kerala", viewers: "107", videoId: "7Y-MMzEcjeA", title: "News18 Kerala 24x7 LIVE | US-Iran War | Operation Toofan | Swetha Menon | Amma Association" }
         ];
 
-        const feed = document.getElementById("feed");
         const quickRail = document.getElementById("quickRail");
         const searchInput = document.getElementById("searchInput");
         const clearSearch = document.getElementById("clearSearch");
-        const emptyState = document.getElementById("emptyState");
         const videoShell = document.getElementById("videoShell");
         const poster = document.getElementById("poster");
         const nowTitle = document.getElementById("nowTitle");
@@ -565,10 +394,6 @@
             return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&playsinline=1&rel=0`;
         }
 
-        function youtubeThumbUrl(videoId) {
-            return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-        }
-
         function playChannel(channel, shouldScroll = true) {
             if (!channel) return;
 
@@ -576,7 +401,6 @@
             nowTitle.textContent = channel.display;
             nowExternal.href = youtubeWatchUrl(channel.videoId);
             videoShell.innerHTML = `<iframe title="${channel.display} live stream" src="${youtubeEmbedUrl(channel.videoId)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
-            renderChannels(searchInput.value);
             renderRail();
 
             if (shouldScroll) {
@@ -585,46 +409,19 @@
         }
 
         function renderRail() {
-            quickRail.innerHTML = channels.map(channel => `
+            const query = searchInput.value.trim().toLowerCase();
+            const filtered = channels.filter(channel => {
+                const haystack = `${channel.display} ${channel.title}`.toLowerCase();
+                return haystack.includes(query);
+            });
+
+            quickRail.innerHTML = filtered.map(channel => `
                 <button class="chip ${channel.videoId === activeVideoId ? "active" : ""}" type="button" data-video-id="${channel.videoId}">
                     ${channel.display}
                 </button>
             `).join("");
-        }
 
-        function renderChannels(query = "") {
-            const normalizedQuery = query.trim().toLowerCase();
-            const visibleChannels = channels.filter(channel => {
-                const haystack = `${channel.display} ${channel.title}`.toLowerCase();
-                return haystack.includes(normalizedQuery);
-            });
-
-            feed.innerHTML = visibleChannels.map(channel => `
-                <article class="channel-card ${channel.videoId === activeVideoId ? "active" : ""}">
-                    <div class="thumb" style="background-image: url('${youtubeThumbUrl(channel.videoId)}')">
-                        <span class="live-pill"><span class="pulse"></span>LIVE</span>
-                    </div>
-                    <div class="card-copy">
-                        <div class="card-topline">
-                            <div class="channel-name">${channel.display}</div>
-                            <div class="viewer-count">${channel.viewers}</div>
-                        </div>
-                        <div class="stream-title">${channel.title}</div>
-                        <div class="card-actions">
-                            <button class="play-button" type="button" data-video-id="${channel.videoId}">
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
-                                Play
-                            </button>
-                            <a class="open-button" href="${youtubeWatchUrl(channel.videoId)}" target="_blank" rel="noreferrer" aria-label="Open ${channel.display} on YouTube">
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                            </a>
-                        </div>
-                    </div>
-                </article>
-            `).join("");
-
-            emptyState.classList.toggle("visible", visibleChannels.length === 0);
-            clearSearch.classList.toggle("visible", normalizedQuery.length > 0);
+            clearSearch.classList.toggle("visible", query.length > 0);
         }
 
         function findChannel(videoId) {
@@ -639,11 +436,6 @@
             }).format(new Date());
         }
 
-        feed.addEventListener("click", event => {
-            const button = event.target.closest(".play-button");
-            if (!button) return;
-            playChannel(findChannel(button.dataset.videoId));
-        });
 
         quickRail.addEventListener("click", event => {
             const button = event.target.closest(".chip");
@@ -651,18 +443,17 @@
             playChannel(findChannel(button.dataset.videoId));
         });
 
-        searchInput.addEventListener("input", event => {
-            renderChannels(event.target.value);
+        searchInput.addEventListener("input", () => {
+            renderRail();
         });
 
         clearSearch.addEventListener("click", () => {
             searchInput.value = "";
             searchInput.focus();
-            renderChannels();
+            renderRail();
         });
 
         renderRail();
-        renderChannels();
         updateClock();
         setInterval(updateClock, 30000);
     </script>
