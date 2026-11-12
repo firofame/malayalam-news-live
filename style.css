@@ -406,14 +406,24 @@ h1 {
     }
 }
 
+/* ── Desktop: full-bleed video ──
+   The player card spans the viewport edge to edge; the surrounding UI
+   stays in a centered reading width so it doesn't stretch on wide screens. */
 @media (min-width: 620px) {
-    body {
-        display: flex;
-        justify-content: center;
+    .app {
+        width: 100%;
+        padding-inline: 0;
     }
 
-    .app {
-        border-inline: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(7, 9, 15, 0.54);
+    .topbar,
+    .rail {
+        width: min(100%, 1100px);
+        margin-inline: auto;
+        padding-inline: 20px;
+    }
+
+    .player-card {
+        border: 0;
+        border-radius: 0;
     }
 }
