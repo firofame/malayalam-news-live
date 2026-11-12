@@ -406,24 +406,35 @@ h1 {
     }
 }
 
-/* ── Desktop: full-bleed video ──
-   The player card spans the viewport edge to edge; the surrounding UI
-   stays in a centered reading width so it doesn't stretch on wide screens. */
+/* ── Desktop: immersive full-bleed video ──
+   The header is dropped and the player starts at the very top edge, full
+   width. Its height is capped at the viewport so the stream is never cut
+   off at the bottom — on wide screens the player letterboxes, on taller
+   ones it keeps its 16:9 shape with the rail peeking below. */
 @media (min-width: 620px) {
-    .app {
-        width: 100%;
-        padding-inline: 0;
+    .topbar {
+        display: none;
     }
 
-    .topbar,
-    .rail {
-        width: min(100%, 1100px);
-        margin-inline: auto;
-        padding-inline: 20px;
+    .app {
+        width: 100%;
+        padding: 0 0 max(90px, calc(70px + env(safe-area-inset-bottom)));
     }
 
     .player-card {
         border: 0;
         border-radius: 0;
+    }
+
+    .video-shell {
+        aspect-ratio: auto;
+        height: min(100vh, 56.25vw);
+        height: min(100dvh, 56.25vw);
+    }
+
+    .rail {
+        width: min(100%, 1100px);
+        margin-inline: auto;
+        padding-inline: 20px;
     }
 }
