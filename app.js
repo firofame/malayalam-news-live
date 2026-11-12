@@ -233,11 +233,21 @@ function goPrev() {
 function renderRail() {
     const scrollLeft = quickRail.querySelector(".rail-track")?.scrollLeft ?? 0;
     quickRail.innerHTML = `
-        <div class="rail-track">${channels.map(channel => `
-            <button class="chip ${channel.channelId === activeChannel().channelId ? "active" : ""}" type="button" data-index="${channels.indexOf(channel)}">
-                ${channel.display}
+        <div class="rail-track">${channels.map((channel, index) => `
+            <button class="chip ${channel.channelId === activeChannel().channelId ? "active" : ""}" type="button" data-index="${index}" data-name="${channel.display}">
+                <img class="chip-logo" src="https://unavatar.io/youtube/${channel.handle}" alt="" loading="lazy" referrerpolicy="no-referrer">
+                <span class="chip-name">${channel.display}</span>
             </button>
         `).join("")}</div>`;
+    quickRail.querySelectorAll(".chip").forEach((chip, index) => {
+        const logo = chip.querySelector(".chip-logo");
+        logo.addEventListener("error", () => {
+            const fallback = document.createElement("span");
+            fallback.className = "chip-logo-fallback";
+            fallback.textContent = channels[index].display.charAt(0);
+            logo.replaceWith(fallback);
+        }, { once: true });
+    });
     quickRail.querySelector(".rail-track").scrollLeft = scrollLeft;
     updateRailFades();
 }
@@ -250,6 +260,15 @@ function updateRailFades() {
     const hidden = track.scrollWidth - track.clientWidth;
     quickRail.classList.toggle("can-scroll-left", track.scrollLeft > 2);
     quickRail.classList.toggle("can-scroll-right", track.scrollLeft < hidden - 2);
+}
+
+/* Desktop stage: when the window is wider than 16:9, the video docks to
+   the left edge at its native ratio and the leftover strip becomes the
+   channel dock — logos only when the strip is narrow. */
+function updateStageLayout() {
+    const leftover = window.innerWidth - window.innerHeight * (16 / 9);
+    document.body.classList.toggle("stage-side", leftover >= 76);
+    document.body.classList.toggle("stage-wide", leftover >= 208);
 }
 
 function updateFabState() {
@@ -289,6 +308,7 @@ poster.addEventListener("click", () => {
 
 document.addEventListener("scroll", updateRailFades, { capture: true, passive: true });
 window.addEventListener("resize", updateRailFades);
+window.addEventListener("resize", updateStageLayout);
 
 fabBtn.addEventListener("click", () => {
     triggerRipple(fabBtn);
@@ -335,6 +355,7 @@ renderRail();
 updateClock();
 setInterval(updateClock, 30000);
 updateFabState();
+updateStageLayout();
 if (document.fonts?.ready) {
     document.fonts.ready.then(updateRailFades); // chip widths settle after the font swap
 }
