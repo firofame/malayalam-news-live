@@ -1,17 +1,21 @@
 /* Malayalam News Live — app.js (ES module) */
 
+/* Channels are keyed on the stable channel ID (UC…). The embed resolves
+   whatever stream is live right now via live_stream?channel=, so playback
+   keeps working when a channel restarts its live stream and the video ID
+   changes. */
 const channels = [
-    { display: "REPORTER LIVE", videoId: "nObUcHKZEGY" },
-    { display: "Asianet News", videoId: "s0LLVQeMmtU" },
-    { display: "24 News", videoId: "1wECsnGZcfc" },
-    { display: "BIG TV", videoId: "HRvY9DoJ_qI" },
-    { display: "News Malayalam 24x7", videoId: "P9MITjM250c" },
-    { display: "Manorama News", videoId: "tgBTspqA5nY" },
-    { display: "Mathrubhumi News", videoId: "RbxEftGN584" },
-    { display: "Kairali News", videoId: "yiiqRHY1Bl8" },
-    { display: "MediaOne TV", videoId: "-8d8-c0yvyU" },
-    { display: "Janam TV", videoId: "T9Ol2JHqKlM" },
-    { display: "News18 Kerala", videoId: "7Y-MMzEcjeA" }
+    { display: "REPORTER LIVE", channelId: "UCFx1nseXKTc1Culiu3neeSQ", handle: "reporterlive" },
+    { display: "Asianet News", channelId: "UCf8w5m0YsRa8MHQ5bwSGmbw", handle: "asianetnews" },
+    { display: "24 News", channelId: "UCup3etEdjyF1L3sRbU-rKLw", handle: "24OnLive" },
+    { display: "BIG TV", channelId: "UClFe5TPbW1MVrOPpbNHTDoQ", handle: "bigtv24x7live" },
+    { display: "News Malayalam 24x7", channelId: "UCXp6JTdq7-WwBK09S7SzmxQ", handle: "newsmalayalamtv" },
+    { display: "Manorama News", channelId: "UCP0uG-mcMImgKnJz-VjJZmQ", handle: "manoramanews" },
+    { display: "Mathrubhumi News", channelId: "UCwXrBBZnIh2ER4lal6WbAHw", handle: "TVMathrubhumi" },
+    { display: "Kairali News", channelId: "UCnEvxaWfVL91XIYuyQRO5QA", handle: "kairalinews" },
+    { display: "MediaOne TV", channelId: "UC-f7r46JhYv78q5pGrO6ivA", handle: "MediaoneTVLive" },
+    { display: "Janam TV", channelId: "UCNVkxRPqsBNejO6B9thG9Xw", handle: "tvjanam" },
+    { display: "News18 Kerala", channelId: "UC-mMi78WJST4N5o8_i1FoXw", handle: "News18Kerala" }
 ];
 
 const STORAGE_KEY = "mnl:lastChannelId";
@@ -48,10 +52,23 @@ const ytApiPromise = new Promise(resolve => {
     setTimeout(() => resolve(window.YT && window.YT.Player ? window.YT : null), 8000);
 });
 
-/* ── Helpers ── */
+/* ── URL helpers ── */
 
-function youtubeWatchUrl(videoId) {
-    return `https://www.youtube.com/watch?v=${videoId}`;
+function youtubeEmbedUrl(channel, forApi = false) {
+    const params = new URLSearchParams({
+        autoplay: "1",
+        playsinline: "1",
+        rel: "0"
+    });
+    if (forApi) {
+        params.set("enablejsapi", "1");
+        params.set("origin", window.location.origin);
+    }
+    return `https://www.youtube.com/embed/live_stream?channel=${channel.channelId}&${params}`;
+}
+
+function channelLiveUrl(channel) {
+    return `https://www.youtube.com/@${channel.handle}/live`;
 }
 
 function activeChannel() {
@@ -60,66 +77,71 @@ function activeChannel() {
 
 function loadLastIndex() {
     const saved = localStorage.getItem(STORAGE_KEY);
-    const index = channels.findIndex(channel => channel.videoId === saved);
+    const index = channels.findIndex(channel => channel.channelId === saved);
     return index >= 0 ? index : 0;
 }
 
 function saveLastIndex() {
     try {
-        localStorage.setItem(STORAGE_KEY, channels[activeIndex].videoId);
+        localStorage.setItem(STORAGE_KEY, channels[activeIndex].channelId);
     } catch {
         /* storage unavailable (private mode etc.) — ignore */
     }
 }
 
-function updatePosterThumb(channel) {
+function updatePosterThumb(videoId) {
+    if (!videoId) return;
     poster.style.backgroundImage =
         `linear-gradient(135deg, rgba(255, 75, 62, 0.78), rgba(9, 14, 24, 0.5)), ` +
-        `url("https://i.ytimg.com/vi/${channel.videoId}/hqdefault.jpg")`;
+        `url("https://i.ytimg.com/vi/${videoId}/hqdefault.jpg")`;
 }
 
 /* ── Player (YouTube IFrame API) ── */
 
-async function ensurePlayer(channel) {
-    if (player) return player;
-    const YT = await ytApiPromise;
-    if (!YT) return null;
+function createPlayer(channel) {
+    const iframe = document.createElement("iframe");
+    iframe.id = "yt-player";
+    iframe.title = `${channel.display} live stream`;
+    iframe.src = youtubeEmbedUrl(channel, true);
+    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+    iframe.allowFullscreen = true;
+    videoShell.appendChild(iframe);
 
-    const mount = document.createElement("div");
-    mount.id = "yt-player";
-    videoShell.appendChild(mount);
-
+    // The target element is an existing iframe, so the API attaches to it
+    // instead of replacing it.
     player = new YT.Player("yt-player", {
-        videoId: channel.videoId,
-        playerVars: { autoplay: 1, playsinline: 1, rel: 0 },
         events: {
             onReady: event => event.target.playVideo(),
             onStateChange: onPlayerStateChange,
             onError: onPlayerError
         }
     });
-    return player;
 }
 
 function onPlayerStateChange(event) {
     switch (event.data) {
-        case window.YT.PlayerState.PLAYING:
+        case window.YT.PlayerState.PLAYING: {
             isPlaying = true;
             consecutiveErrors = 0;
             poster.classList.add("hidden");
+            // live_stream embeds resolve to the current live video —
+            // grab its ID for the poster thumbnail.
+            const videoId = player?.getVideoData?.()?.video_id;
+            updatePosterThumb(videoId);
             break;
+        }
         case window.YT.PlayerState.PAUSED:
             isPlaying = false;
             break;
         case window.YT.PlayerState.ENDED:
-            goNext(); // stream/VOD ended — hop to the next channel
+            goNext(); // stream ended — hop to the next channel
             break;
     }
     updateFabState();
 }
 
 function onPlayerError() {
-    // Video unavailable (embedding disabled, stream down, etc.) — move on.
+    // Stream unavailable (embedding disabled, offline, etc.) — move on.
     consecutiveErrors += 1;
     if (consecutiveErrors >= channels.length) {
         consecutiveErrors = 0;
@@ -136,7 +158,7 @@ function fallbackPlay(channel) {
     videoShell.querySelector("iframe")?.remove();
     const iframe = document.createElement("iframe");
     iframe.title = `${channel.display} live stream`;
-    iframe.src = `https://www.youtube.com/embed/${channel.videoId}?autoplay=1&playsinline=1&rel=0`;
+    iframe.src = youtubeEmbedUrl(channel);
     iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
     iframe.allowFullscreen = true;
     videoShell.appendChild(iframe);
@@ -159,17 +181,20 @@ async function playChannel(index, shouldScroll = true) {
     const channel = activeChannel();
     saveLastIndex();
 
-    fabExternal.href = youtubeWatchUrl(channel.videoId);
-    updatePosterThumb(channel);
+    fabExternal.href = channelLiveUrl(channel);
     renderRail();
+    poster.classList.add("hidden");
 
-    if (player) {
-        poster.classList.add("hidden");
-        player.loadVideoById(channel.videoId);
+    const YT = await ytApiPromise;
+    if (YT) {
+        // Channel-live embeds can't use loadVideoById — recreate instead.
+        if (player) {
+            player.destroy();
+            player = null;
+        }
+        videoShell.querySelector("iframe")?.remove();
+        createPlayer(channel);
         isPlaying = true; // confirmed by onStateChange
-    } else if (await ensurePlayer(channel)) {
-        poster.classList.add("hidden");
-        isPlaying = true;
     } else {
         fallbackPlay(channel);
     }
@@ -207,7 +232,7 @@ function goPrev() {
 
 function renderRail() {
     quickRail.innerHTML = channels.map(channel => `
-        <button class="chip ${channel.videoId === activeChannel().videoId ? "active" : ""}" type="button" data-index="${channels.indexOf(channel)}">
+        <button class="chip ${channel.channelId === activeChannel().channelId ? "active" : ""}" type="button" data-index="${channels.indexOf(channel)}">
             ${channel.display}
         </button>
     `).join("");
@@ -217,7 +242,7 @@ function updateFabState() {
     fabBtn.classList.toggle("is-playing", isPlaying);
     fabBtn.setAttribute("aria-label", isPlaying ? "Pause stream" : "Play stream");
     fabChannelName.textContent = activeChannel().display;
-    fabExternal.href = youtubeWatchUrl(activeChannel().videoId);
+    fabExternal.href = channelLiveUrl(activeChannel());
 }
 
 function triggerRipple(btn) {
