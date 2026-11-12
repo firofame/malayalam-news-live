@@ -24,11 +24,6 @@ const quickRail = document.getElementById("quickRail");
 const videoShell = document.getElementById("videoShell");
 const poster = document.getElementById("poster");
 const clock = document.getElementById("clock");
-const fabExternal = document.getElementById("fabExternal");
-const fabBtn = document.getElementById("fabPlayPause");
-const fabPrev = document.getElementById("fabPrev");
-const fabNext = document.getElementById("fabNext");
-const fabChannelName = document.getElementById("fabChannelName");
 
 let activeIndex = loadLastIndex();
 let player = null; // YouTube IFrame API player (null until first play / fallback)
@@ -58,17 +53,20 @@ function youtubeEmbedUrl(channel, forApi = false) {
     const params = new URLSearchParams({
         autoplay: "1",
         playsinline: "1",
-        rel: "0"
+        rel: "0",
+        // Strip YouTube's own player chrome — the app provides the
+        // play/pause control, keyboard shortcuts stay on Space/K and the
+        // channel arrows.
+        controls: "0",
+        disablekb: "1",
+        fs: "0",
+        iv_load_policy: "3"
     });
     if (forApi) {
         params.set("enablejsapi", "1");
         params.set("origin", window.location.origin);
     }
     return `https://www.youtube.com/embed/live_stream?channel=${channel.channelId}&${params}`;
-}
-
-function channelLiveUrl(channel) {
-    return `https://www.youtube.com/@${channel.handle}/live`;
 }
 
 function activeChannel() {
@@ -137,7 +135,7 @@ function onPlayerStateChange(event) {
             goNext(); // stream ended — hop to the next channel
             break;
     }
-    updateFabState();
+    updatePlayState();
 }
 
 function onPlayerError() {
@@ -146,7 +144,7 @@ function onPlayerError() {
     if (consecutiveErrors >= channels.length) {
         consecutiveErrors = 0;
         isPlaying = false;
-        updateFabState();
+        updatePlayState();
         return;
     }
     goNext();
@@ -181,7 +179,6 @@ async function playChannel(index, shouldScroll = true) {
     const channel = activeChannel();
     saveLastIndex();
 
-    fabExternal.href = channelLiveUrl(channel);
     renderRail();
     poster.classList.add("hidden");
 
@@ -199,7 +196,7 @@ async function playChannel(index, shouldScroll = true) {
         fallbackPlay(channel);
     }
 
-    updateFabState();
+    updatePlayState();
 
     if (shouldScroll) {
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -217,7 +214,7 @@ function togglePlayback() {
     } else {
         playChannel(activeIndex, false);
     }
-    updateFabState();
+    updatePlayState();
 }
 
 function goNext() {
@@ -231,15 +228,15 @@ function goPrev() {
 /* ── UI ── */
 
 function renderRail() {
-    const scrollLeft = quickRail.querySelector(".rail-track")?.scrollLeft ?? 0;
-    quickRail.innerHTML = `
-        <div class="rail-track">${channels.map((channel, index) => `
-            <button class="chip ${channel.channelId === activeChannel().channelId ? "active" : ""}" type="button" data-index="${index}" data-name="${channel.display}">
-                <img class="chip-logo" src="https://unavatar.io/youtube/${channel.handle}" alt="" loading="lazy" referrerpolicy="no-referrer">
-                <span class="chip-name">${channel.display}</span>
-            </button>
-        `).join("")}</div>`;
-    quickRail.querySelectorAll(".chip").forEach((chip, index) => {
+    const track = quickRail.querySelector(".rail-track");
+    const scrollLeft = track.scrollLeft;
+    track.innerHTML = channels.map((channel, index) => `
+        <button class="chip ${channel.channelId === activeChannel().channelId ? "active" : ""}" type="button" data-index="${index}" data-name="${channel.display}">
+            <img class="chip-logo" src="https://unavatar.io/youtube/${channel.handle}" alt="" loading="lazy" referrerpolicy="no-referrer">
+            <span class="chip-name">${channel.display}</span>
+        </button>
+    `).join("");
+    track.querySelectorAll(".chip").forEach((chip, index) => {
         const logo = chip.querySelector(".chip-logo");
         logo.addEventListener("error", () => {
             const fallback = document.createElement("span");
@@ -248,7 +245,7 @@ function renderRail() {
             logo.replaceWith(fallback);
         }, { once: true });
     });
-    quickRail.querySelector(".rail-track").scrollLeft = scrollLeft;
+    track.scrollLeft = scrollLeft;
     updateRailFades();
 }
 
@@ -271,11 +268,11 @@ function updateStageLayout() {
     document.body.classList.toggle("stage-wide", leftover >= 208);
 }
 
-function updateFabState() {
-    fabBtn.classList.toggle("is-playing", isPlaying);
-    fabBtn.setAttribute("aria-label", isPlaying ? "Pause stream" : "Play stream");
-    fabChannelName.textContent = activeChannel().display;
-    fabExternal.href = channelLiveUrl(activeChannel());
+function updatePlayState() {
+    document.querySelectorAll(".play-toggle").forEach(btn => {
+        btn.classList.toggle("is-playing", isPlaying);
+        btn.setAttribute("aria-label", isPlaying ? "Pause stream" : "Play stream");
+    });
 }
 
 function triggerRipple(btn) {
@@ -310,19 +307,11 @@ document.addEventListener("scroll", updateRailFades, { capture: true, passive: t
 window.addEventListener("resize", updateRailFades);
 window.addEventListener("resize", updateStageLayout);
 
-fabBtn.addEventListener("click", () => {
-    triggerRipple(fabBtn);
-    togglePlayback();
-});
-
-fabPrev.addEventListener("click", () => {
-    triggerRipple(fabPrev);
-    goPrev();
-});
-
-fabNext.addEventListener("click", () => {
-    triggerRipple(fabNext);
-    goNext();
+document.querySelectorAll(".play-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+        triggerRipple(btn);
+        togglePlayback();
+    });
 });
 
 document.addEventListener("keydown", event => {
@@ -338,12 +327,10 @@ document.addEventListener("keydown", event => {
             break;
         case "ArrowLeft":
             event.preventDefault();
-            triggerRipple(fabPrev);
             goPrev();
             break;
         case "ArrowRight":
             event.preventDefault();
-            triggerRipple(fabNext);
             goNext();
             break;
     }
@@ -354,7 +341,7 @@ document.addEventListener("keydown", event => {
 renderRail();
 updateClock();
 setInterval(updateClock, 30000);
-updateFabState();
+updatePlayState();
 updateStageLayout();
 if (document.fonts?.ready) {
     document.fonts.ready.then(updateRailFades); // chip widths settle after the font swap
