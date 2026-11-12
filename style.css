@@ -47,7 +47,7 @@ button {
     width: min(100%, 480px);
     min-height: 100vh;
     margin: 0 auto;
-    padding: max(10px, env(safe-area-inset-top)) 14px max(90px, calc(70px + env(safe-area-inset-bottom)));
+    padding: max(10px, env(safe-area-inset-top)) 14px max(16px, env(safe-area-inset-bottom));
 }
 
 .topbar {
@@ -176,38 +176,198 @@ h1 {
     fill: white;
 }
 
-.youtube-link {
-    width: 42px;
-    height: 42px;
-    display: inline-grid;
+/* ── Floating bottom dock: play/pause + channel strip ──
+   A single play/pause control and the channel pills; YouTube's own
+   player chrome is disabled on the embed itself. */
+.bottom-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px max(14px, env(safe-area-inset-bottom));
+    pointer-events: none;
+}
+
+.play-toggle {
+    pointer-events: auto;
+    position: relative;
+    display: grid;
     place-items: center;
-    border: 0;
-    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(13, 17, 28, 0.82);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
     color: var(--ink);
-    background: rgba(255, 255, 255, 0.1);
-    text-decoration: none;
-    transition: background 0.2s ease;
+    cursor: pointer;
+    outline: none;
+    isolation: isolate;
+    overflow: hidden;
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.youtube-link:hover {
-    background: rgba(255, 255, 255, 0.18);
+.play-toggle:hover {
+    background: rgba(255, 255, 255, 0.13);
 }
 
-.youtube-link svg {
-    width: 18px;
-    height: 18px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2.2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+.play-toggle:active {
+    transform: scale(0.9);
+}
+
+.play-toggle.is-playing {
+    border-color: rgba(66, 214, 164, 0.35);
+}
+
+/* The floating button: circular, above the channel strip. */
+.bottom-dock > .play-toggle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+}
+
+.bottom-dock > .play-toggle.is-playing::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 0%, rgba(66, 214, 164, 0.22) 50%, transparent 100%);
+    animation: fab-spin 3s linear infinite;
+    z-index: -1;
+}
+
+@keyframes fab-spin {
+    to { transform: rotate(360deg); }
+}
+
+.fab-icon {
+    width: 26px;
+    height: 26px;
+    fill: currentColor;
+    transition: opacity 0.15s ease, transform 0.2s ease;
+}
+
+.fab-icon-play,
+.fab-icon-pause {
+    position: absolute;
+}
+
+.play-toggle.is-playing .fab-icon-play {
+    opacity: 0;
+    transform: scale(0.5);
+}
+
+.play-toggle.is-playing .fab-icon-pause {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.play-toggle:not(.is-playing) .fab-icon-play {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.play-toggle:not(.is-playing) .fab-icon-pause {
+    opacity: 0;
+    transform: scale(0.5);
+}
+
+/* Ripple effect on tap */
+.fab-ripple {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(0);
+    opacity: 1;
+    pointer-events: none;
+}
+
+.fab-ripple.animate {
+    animation: fab-ripple-anim 0.45s ease-out forwards;
+}
+
+@keyframes fab-ripple-anim {
+    to {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+}
+
+/* Channel strip pill */
+.rail {
+    pointer-events: auto;
+    width: max-content;
+    max-width: 100%;
+    padding: 7px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 999px;
+    background: rgba(13, 17, 28, 0.82);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .rail-track {
     display: flex;
-    flex-wrap: wrap;
-    gap: 9px;
-    padding: 11px 0 10px;
+    flex-wrap: nowrap;
+    gap: 5px;
+    padding: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.rail-track::-webkit-scrollbar {
+    display: none;
+}
+
+.rail.can-scroll-left .rail-track {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 26px);
+    mask-image: linear-gradient(90deg, transparent, #000 26px);
+}
+
+.rail.can-scroll-right .rail-track {
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent);
+}
+
+.rail.can-scroll-left.can-scroll-right .rail-track {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 26px, #000 calc(100% - 26px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 26px, #000 calc(100% - 26px), transparent);
+}
+
+/* Dock footer play/pause (desktop side-dock only) */
+.rail-play {
+    display: none;
+    width: 100%;
+    min-height: 44px;
+    margin-top: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--ink);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.rail-play:hover {
+    background: rgba(255, 255, 255, 0.13);
+}
+
+.rail-play.is-playing {
+    border-color: rgba(66, 214, 164, 0.35);
+}
+
+.rail-play .fab-icon {
+    width: 22px;
+    height: 22px;
 }
 
 .chip {
@@ -256,183 +416,6 @@ h1 {
     background: var(--mint);
 }
 
-/* ── Floating Transport Bar ── */
-.fab-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-    display: flex;
-    justify-content: center;
-    padding: 0 14px max(14px, env(safe-area-inset-bottom));
-    pointer-events: none;
-}
-
-.fab-transport {
-    pointer-events: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.13);
-    border-radius: 28px;
-    background: rgba(13, 17, 28, 0.82);
-    backdrop-filter: blur(28px);
-    -webkit-backdrop-filter: blur(28px);
-    box-shadow:
-        0 -4px 30px rgba(0, 0, 0, 0.4),
-        0 8px 32px rgba(0, 0, 0, 0.45),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    min-width: 260px;
-    max-width: 360px;
-}
-
-.fab-channel-name {
-    color: var(--soft);
-    font-family: "Sora", sans-serif;
-    font-size: 0.72rem;
-    font-weight: 600;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    opacity: 0.8;
-    transition: opacity 0.2s ease;
-}
-
-.fab-controls {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-/* Shared button base */
-.fab-btn {
-    position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.07);
-    color: var(--ink);
-    cursor: pointer;
-    outline: none;
-    display: grid;
-    place-items: center;
-    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-    overflow: hidden;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.fab-btn:active {
-    transform: scale(0.88);
-}
-
-.fab-btn:hover {
-    background: rgba(255, 255, 255, 0.13);
-}
-
-/* Skip (prev / next) buttons */
-.fab-skip {
-    width: 48px;
-    height: 48px;
-}
-
-.fab-skip svg {
-    width: 22px;
-    height: 22px;
-    fill: currentColor;
-}
-
-/* Center play/pause — larger */
-.fab-play-pause {
-    width: 64px;
-    height: 64px;
-    border-color: rgba(255, 255, 255, 0.18);
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
-}
-
-.fab-play-pause:hover {
-    background: rgba(255, 255, 255, 0.17);
-    box-shadow:
-        0 6px 24px rgba(0, 0, 0, 0.35),
-        0 0 0 3px rgba(66, 214, 164, 0.15);
-}
-
-.fab-play-pause.is-playing {
-    border-color: rgba(66, 214, 164, 0.35);
-}
-
-.fab-play-pause.is-playing::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: 999px;
-    background: conic-gradient(from 0deg, transparent 0%, rgba(66, 214, 164, 0.22) 50%, transparent 100%);
-    animation: fab-spin 3s linear infinite;
-    z-index: -1;
-}
-
-@keyframes fab-spin {
-    to { transform: rotate(360deg); }
-}
-
-.fab-icon {
-    width: 28px;
-    height: 28px;
-    fill: currentColor;
-    transition: opacity 0.15s ease, transform 0.2s ease;
-}
-
-.fab-icon-play,
-.fab-icon-pause {
-    position: absolute;
-}
-
-.fab-play-pause.is-playing .fab-icon-play {
-    opacity: 0;
-    transform: scale(0.5);
-}
-
-.fab-play-pause.is-playing .fab-icon-pause {
-    opacity: 1;
-    transform: scale(1);
-}
-
-.fab-play-pause:not(.is-playing) .fab-icon-play {
-    opacity: 1;
-    transform: scale(1);
-}
-
-.fab-play-pause:not(.is-playing) .fab-icon-pause {
-    opacity: 0;
-    transform: scale(0.5);
-}
-
-/* Ripple effect on tap */
-.fab-ripple {
-    position: absolute;
-    inset: 0;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.15);
-    transform: scale(0);
-    opacity: 1;
-    pointer-events: none;
-}
-
-.fab-ripple.animate {
-    animation: fab-ripple-anim 0.45s ease-out forwards;
-}
-
-@keyframes fab-ripple-anim {
-    to {
-        transform: scale(2.5);
-        opacity: 0;
-    }
-}
-
 /* ── Desktop: stage layout ──
    The header is dropped and the video pins to the top edge. When the
    window is wider than 16:9 it docks to the left edge at its native
@@ -461,40 +444,7 @@ h1 {
         height: min(100dvh, 56.25vw);
     }
 
-    /* Floating channel rail, styled to match the transport bar. The
-       track scrolls horizontally when the chips don't fit, with edge
-       fades hinting at the hidden ones. */
-    .rail {
-        position: fixed;
-        left: 50%;
-        bottom: 140px;
-        transform: translateX(-50%);
-        z-index: 99;
-        width: max-content;
-        max-width: calc(100vw - 24px);
-        padding: 7px 9px;
-        border: 1px solid rgba(255, 255, 255, 0.13);
-        border-radius: 999px;
-        background: rgba(13, 17, 28, 0.82);
-        backdrop-filter: blur(28px);
-        -webkit-backdrop-filter: blur(28px);
-        box-shadow:
-            0 8px 32px rgba(0, 0, 0, 0.45),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    }
-
-    .rail-track {
-        flex-wrap: nowrap;
-        gap: 5px;
-        padding: 0;
-        overflow-x: auto;
-        scrollbar-width: none;
-    }
-
-    .rail-track::-webkit-scrollbar {
-        display: none;
-    }
-
+    /* Compact pills inside the bottom strip. */
     .rail .chip {
         min-height: 32px;
         padding: 0 11px 0 4px;
@@ -507,25 +457,11 @@ h1 {
         height: 18px;
     }
 
-    .rail.can-scroll-left .rail-track {
-        -webkit-mask-image: linear-gradient(90deg, transparent, #000 26px);
-        mask-image: linear-gradient(90deg, transparent, #000 26px);
-    }
-
-    .rail.can-scroll-right .rail-track {
-        -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent);
-        mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent);
-    }
-
-    .rail.can-scroll-left.can-scroll-right .rail-track {
-        -webkit-mask-image: linear-gradient(90deg, transparent, #000 26px, #000 calc(100% - 26px), transparent);
-        mask-image: linear-gradient(90deg, transparent, #000 26px, #000 calc(100% - 26px), transparent);
-    }
-
     /* ── Side-dock mode (window wider than 16:9) ──
        The video uses its full 16:9 height against the left edge and the
        leftover strip docks the channels: logos with names underneath,
-       switching to inline rows once the dock is wide enough. */
+       switching to inline rows once the dock is wide enough. The bottom
+       dock dissolves and the play/pause moves below the channel list. */
     body.stage-side .video-shell {
         height: 100vh;
         height: 100dvh;
@@ -533,12 +469,18 @@ h1 {
         width: calc(100dvh * 16 / 9);
     }
 
-    body.stage-side .fab-bar {
-        right: max(0px, calc(100vw - 100vh * 16 / 9));
-        right: max(0px, calc(100vw - 100dvh * 16 / 9));
+    body.stage-side .bottom-dock {
+        display: contents;
+    }
+
+    body.stage-side .bottom-dock > .play-toggle {
+        display: none;
     }
 
     body.stage-side .rail {
+        position: fixed;
+        display: flex;
+        flex-direction: column;
         left: auto;
         top: 0;
         right: 0;
@@ -556,6 +498,7 @@ h1 {
     }
 
     body.stage-side .rail-track {
+        flex: 1 1 auto;
         flex-direction: column;
         flex-wrap: nowrap;
         gap: 6px;
@@ -570,6 +513,11 @@ h1 {
 
     body.stage-side .rail-track::-webkit-scrollbar {
         display: none;
+    }
+
+    body.stage-side .rail-play {
+        display: grid;
+        place-items: center;
     }
 
     body.stage-side .rail-track::before {

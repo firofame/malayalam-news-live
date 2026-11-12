@@ -29,33 +29,22 @@
                 </button>
             </div>
         </section>
-
-        <nav class="rail" id="quickRail" aria-label="Quick channel list"></nav>
     </main>
 
-    <!-- Floating Transport Bar -->
-    <div class="fab-bar">
-        <div class="fab-transport">
-            <span class="fab-channel-name" id="fabChannelName" aria-live="polite">REPORTER LIVE</span>
-            <div class="fab-controls">
-                <a class="youtube-link" id="fabExternal" href="https://www.youtube.com/@reporterlive/live" target="_blank" rel="noreferrer" aria-label="Open on YouTube">
-                    <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                </a>
-                <button class="fab-btn fab-skip" id="fabPrev" type="button" aria-label="Previous channel">
-                    <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"></path></svg>
-                    <span class="fab-ripple"></span>
-                </button>
-                <button class="fab-btn fab-play-pause" id="fabPlayPause" type="button" aria-label="Play stream">
-                    <svg class="fab-icon fab-icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
-                    <svg class="fab-icon fab-icon-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>
-                    <span class="fab-ripple" id="fabRipple"></span>
-                </button>
-                <button class="fab-btn fab-skip" id="fabNext" type="button" aria-label="Next channel">
-                    <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm10-12v12h2V6h-2z"></path></svg>
-                    <span class="fab-ripple"></span>
-                </button>
-            </div>
-        </div>
+    <!-- Floating bottom dock: play/pause + channel strip -->
+    <div class="bottom-dock">
+        <button class="play-toggle" id="playToggle" type="button" aria-label="Play stream">
+            <svg class="fab-icon fab-icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+            <svg class="fab-icon fab-icon-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>
+            <span class="fab-ripple" id="fabRipple"></span>
+        </button>
+        <nav class="rail" id="quickRail" aria-label="Channels">
+            <div class="rail-track"></div>
+            <button class="play-toggle rail-play" id="railPlay" type="button" aria-label="Play stream">
+                <svg class="fab-icon fab-icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+                <svg class="fab-icon fab-icon-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>
+            </button>
+        </nav>
     </div>
 
     <script type="module" src="app.js"></script>

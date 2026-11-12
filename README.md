@@ -7,10 +7,10 @@ A modern, high-performance web dashboard containing top Malayalam news channels 
 - **Never Goes Stale**: Channels are keyed on their stable YouTube channel ID; the player embeds whatever stream is live right now via `live_stream?channel=` — no more dead video IDs when a channel restarts its stream.
 - **Real Play/Pause**: The transport bar reflects actual player state — pause holds your position instead of tearing the stream down.
 - **Glassmorphic UI**: Sleek, immersive dark mode design featuring smooth micro-animations.
-- **Floating Transport Bar**: Prev/next/play-pause controls always in reach, with the active channel name and a quick link to the channel's live page on YouTube.
+- **Stage Layout**: On desktop the video docks edge to edge at its native 16:9 — no letterboxing — with all channels in a side dock and play/pause below the list. On mobile the channel pills float at the bottom of the screen for easy reach.
+- **Minimal Controls**: A single play/pause button; YouTube's own player chrome (progress bar, volume, menus) is hidden on the embed. Keyboard shortcuts (`Space`/`K`, `←`/`→`) still work.
 - **Auto-Skip Broken Streams**: If a channel's embed is unavailable (embedding disabled, stream down), playback hops to the next channel automatically.
 - **Remembers Your Channel**: The last watched channel is restored on the next visit.
-- **Keyboard Shortcuts**: `Space`/`K` toggles playback, `←`/`→` switch channels.
 
 ## How to Run
 To prevent browser security policies from blocking local YouTube iframe embeds (Error 153), host the dashboard on a local port:
