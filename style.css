@@ -203,7 +203,7 @@ h1 {
     stroke-linejoin: round;
 }
 
-.rail {
+.rail-track {
     display: flex;
     flex-wrap: wrap;
     gap: 9px;
@@ -212,6 +212,7 @@ h1 {
 
 .chip {
     min-height: 38px;
+    white-space: nowrap;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 999px;
     padding: 0 14px;
@@ -407,10 +408,9 @@ h1 {
 }
 
 /* ── Desktop: immersive full-bleed video ──
-   The header is dropped and the player starts at the very top edge, full
-   width. Its height is capped at the viewport so the stream is never cut
-   off at the bottom — on wide screens the player letterboxes, on taller
-   ones it keeps its 16:9 shape with the rail peeking below. */
+   The header is dropped and the player fills the viewport from the top
+   edge. The channel rail floats above the transport bar as a second
+   glass strip, so there is nothing left to scroll. */
 @media (min-width: 620px) {
     .topbar {
         display: none;
@@ -418,7 +418,7 @@ h1 {
 
     .app {
         width: 100%;
-        padding: 0 0 max(90px, calc(70px + env(safe-area-inset-bottom)));
+        padding: 0;
     }
 
     .player-card {
@@ -428,13 +428,62 @@ h1 {
 
     .video-shell {
         aspect-ratio: auto;
-        height: min(100vh, 56.25vw);
-        height: min(100dvh, 56.25vw);
+        height: 100vh;
+        height: 100dvh;
     }
 
+    /* Floating channel rail, styled to match the transport bar. The
+       track scrolls horizontally when the chips don't fit, with edge
+       fades hinting at the hidden ones. */
     .rail {
-        width: min(100%, 1100px);
-        margin-inline: auto;
-        padding-inline: 20px;
+        position: fixed;
+        left: 50%;
+        bottom: 140px;
+        transform: translateX(-50%);
+        z-index: 99;
+        width: max-content;
+        max-width: calc(100vw - 24px);
+        padding: 7px 9px;
+        border: 1px solid rgba(255, 255, 255, 0.13);
+        border-radius: 999px;
+        background: rgba(13, 17, 28, 0.82);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.45),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .rail-track {
+        flex-wrap: nowrap;
+        gap: 8px;
+        padding: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .rail-track::-webkit-scrollbar {
+        display: none;
+    }
+
+    .rail .chip {
+        min-height: 34px;
+        padding: 0 12px;
+        font-size: 0.75rem;
+    }
+
+    .rail.can-scroll-left .rail-track {
+        -webkit-mask-image: linear-gradient(90deg, transparent, #000 26px);
+        mask-image: linear-gradient(90deg, transparent, #000 26px);
+    }
+
+    .rail.can-scroll-right .rail-track {
+        -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent);
+        mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent);
+    }
+
+    .rail.can-scroll-left.can-scroll-right .rail-track {
+        -webkit-mask-image: linear-gradient(90deg, transparent, #000 26px, #000 calc(100% - 26px), transparent);
+        mask-image: linear-gradient(90deg, transparent, #000 26px, #000 calc(100% - 26px), transparent);
     }
 }
