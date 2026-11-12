@@ -231,11 +231,25 @@ function goPrev() {
 /* ── UI ── */
 
 function renderRail() {
-    quickRail.innerHTML = channels.map(channel => `
-        <button class="chip ${channel.channelId === activeChannel().channelId ? "active" : ""}" type="button" data-index="${channels.indexOf(channel)}">
-            ${channel.display}
-        </button>
-    `).join("");
+    const scrollLeft = quickRail.querySelector(".rail-track")?.scrollLeft ?? 0;
+    quickRail.innerHTML = `
+        <div class="rail-track">${channels.map(channel => `
+            <button class="chip ${channel.channelId === activeChannel().channelId ? "active" : ""}" type="button" data-index="${channels.indexOf(channel)}">
+                ${channel.display}
+            </button>
+        `).join("")}</div>`;
+    quickRail.querySelector(".rail-track").scrollLeft = scrollLeft;
+    updateRailFades();
+}
+
+/* Desktop floating rail: fade an edge while more chips are hidden in
+   that direction. */
+function updateRailFades() {
+    const track = quickRail.querySelector(".rail-track");
+    if (!track) return;
+    const hidden = track.scrollWidth - track.clientWidth;
+    quickRail.classList.toggle("can-scroll-left", track.scrollLeft > 2);
+    quickRail.classList.toggle("can-scroll-right", track.scrollLeft < hidden - 2);
 }
 
 function updateFabState() {
@@ -272,6 +286,9 @@ quickRail.addEventListener("click", event => {
 poster.addEventListener("click", () => {
     playChannel(activeIndex, false);
 });
+
+document.addEventListener("scroll", updateRailFades, { capture: true, passive: true });
+window.addEventListener("resize", updateRailFades);
 
 fabBtn.addEventListener("click", () => {
     triggerRipple(fabBtn);
@@ -318,3 +335,6 @@ renderRail();
 updateClock();
 setInterval(updateClock, 30000);
 updateFabState();
+if (document.fonts?.ready) {
+    document.fonts.ready.then(updateRailFades); // chip widths settle after the font swap
+}
