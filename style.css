@@ -348,10 +348,11 @@ h1 {
 }
 
 /* ── Volume control ──
-   Mute button + slim slider. Lives at the trailing end of the transport
-   pill in bottom mode and as a row above the play/pause button in the
-   desktop side dock. Hidden entirely when the IFrame API is unavailable
-   (the fallback iframe exposes no volume control). */
+   Mute button, −/+ steppers and a slim slider. Lives at the trailing end
+   of the transport pill in bottom mode and above the play/pause button in
+   the desktop side dock (stacked beneath the buttons in a thin dock).
+   Hidden entirely when the IFrame API is unavailable (the fallback iframe
+   exposes no volume control). */
 .volume {
     display: none;
     flex: 0 0 auto;
@@ -367,6 +368,7 @@ body.api-ready .volume {
 }
 
 .volume-btn {
+    flex: 0 0 auto; /* never squeeze the buttons — the slider yields */
     display: grid;
     place-items: center;
     width: 28px;
@@ -383,6 +385,39 @@ body.api-ready .volume {
 .volume-btn:hover {
     background: rgba(255, 255, 255, 0.12);
     color: var(--ink);
+}
+
+/* −/+ steppers flanking the slider */
+.volume-step {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--soft);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.volume-step:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--ink);
+}
+
+.volume-step:disabled {
+    opacity: 0.35;
+    cursor: default;
+    background: transparent;
+}
+
+.volume-step svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
 }
 
 .volume-icon {
@@ -628,7 +663,9 @@ body.api-ready .volume {
         place-items: center;
     }
 
-    /* Side dock: volume sits between the channel list and play/pause. */
+    /* Side dock: volume sits between the channel list and play/pause.
+       Thin dock: the slider stacks beneath mute + −/+ as its own
+       full-width row instead of being squeezed out. */
     body.stage-side .volume {
         width: 100%;
         max-width: 320px;
@@ -639,18 +676,29 @@ body.api-ready .volume {
     }
 
     body.stage-side .volume-slider {
-        flex: 1 1 auto;
+        flex: 1 1 44px; /* explicit small basis — intrinsic size would overflow */
         width: auto;
-        min-width: 0;
+        min-width: 44px;
     }
 
-    /* Dock too thin for a slider — mute button spans the strip instead. */
+    body.stage-side.dock-stacked .volume {
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    body.stage-side.dock-stacked .volume-slider {
+        order: 9; /* pack after the buttons — always alone on its own row */
+        flex: 1 1 100%;
+    }
+
     body.stage-side.dock-narrow .volume {
         gap: 0;
         padding: 10px 0 0;
     }
 
-    body.stage-side.dock-narrow .volume-slider {
+    /* Dock too thin even for the stacked layout — mute-only button. */
+    body.stage-side.dock-narrow .volume-slider,
+    body.stage-side.dock-narrow .volume-step {
         display: none;
     }
 

@@ -27,6 +27,8 @@ const poster = document.getElementById("poster");
 const clock = document.getElementById("clock");
 const volumeControl = document.getElementById("volumeControl");
 const volumeBtn = document.getElementById("volumeBtn");
+const volumeDown = document.getElementById("volumeDown");
+const volumeUp = document.getElementById("volumeUp");
 const volumeSlider = document.getElementById("volumeSlider");
 
 let activeIndex = loadLastIndex();
@@ -161,6 +163,8 @@ function updateVolumeUI() {
     volumeSlider.style.setProperty("--fill", `${shown}%`);
     volumeControl.classList.toggle("is-muted", silent);
     volumeBtn.setAttribute("aria-label", silent ? "Unmute stream" : "Mute stream");
+    volumeDown.disabled = volume <= 0;
+    volumeUp.disabled = volume >= 100;
 }
 
 function updatePosterThumb(videoId) {
@@ -348,8 +352,12 @@ function updateStageLayout() {
     const leftover = window.innerWidth - window.innerHeight * (16 / 9);
     document.body.classList.toggle("stage-side", leftover >= 76);
     document.body.classList.toggle("stage-wide", leftover >= 208);
-    // Side dock too thin for a slider — collapse volume to a mute button.
-    document.body.classList.toggle("dock-narrow", leftover < 128);
+    // Side dock volume adapts: one row in a wide (stage-wide) dock,
+    // slider stacked beneath mute + −/+ in a thinner dock, mute-only
+    // below that. Stacked beats squeezed: the slider gets the full
+    // dock width instead of ~50px beside the steppers.
+    document.body.classList.toggle("dock-narrow", leftover < 104);
+    document.body.classList.toggle("dock-stacked", leftover >= 104 && leftover < 208);
 }
 
 function updatePlayState() {
@@ -388,6 +396,8 @@ poster.addEventListener("click", () => {
 });
 
 volumeBtn.addEventListener("click", toggleMute);
+volumeDown.addEventListener("click", () => setVolumeLevel(volume - 5));
+volumeUp.addEventListener("click", () => setVolumeLevel(volume + 5));
 volumeSlider.addEventListener("input", () => setVolumeLevel(Number(volumeSlider.value)));
 
 document.addEventListener("scroll", updateRailFades, { capture: true, passive: true });
