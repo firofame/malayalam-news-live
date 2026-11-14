@@ -19,16 +19,24 @@ const channels = [
 ];
 
 const STORAGE_KEY = "mnl:lastChannelId";
+const VOLUME_KEY = "mnl:volume";
 
 const quickRail = document.getElementById("quickRail");
 const videoShell = document.getElementById("videoShell");
 const poster = document.getElementById("poster");
 const clock = document.getElementById("clock");
+const volumeControl = document.getElementById("volumeControl");
+const volumeBtn = document.getElementById("volumeBtn");
+const volumeSlider = document.getElementById("volumeSlider");
 
 let activeIndex = loadLastIndex();
 let player = null; // YouTube IFrame API player (null until first play / fallback)
+let playerReady = false; // volume/setVolume calls need onReady to have fired
 let isPlaying = false;
 let consecutiveErrors = 0;
+let volume = 100; // 0–100, as persisted
+let muted = false;
+let volumeBeforeSilence = 100; // restores when unmuting from zero
 
 /* ── YouTube IFrame API loading ──
    Resolves with `window.YT` once ready, or null if the API can't load
@@ -87,6 +95,74 @@ function saveLastIndex() {
     }
 }
 
+/* ── Volume (YouTube IFrame API only — the fallback iframe exposes no
+   volume control, so the UI stays hidden in that mode) ── */
+
+function loadVolumeState() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(VOLUME_KEY));
+        if (saved && Number.isFinite(saved.volume)) {
+            volume = Math.min(100, Math.max(0, Math.round(saved.volume)));
+        }
+        muted = saved?.muted === true;
+    } catch {
+        /* unreadable/no storage — keep defaults */
+    }
+}
+
+function persistVolume() {
+    try {
+        localStorage.setItem(VOLUME_KEY, JSON.stringify({ volume, muted }));
+    } catch {
+        /* storage unavailable — ignore */
+    }
+}
+
+function applyVolume() {
+    if (!player || !playerReady) return;
+    // Keep the player's internal level at `volume` and drive silence via
+    // the mute flag, so unmuting restores exactly what was set before.
+    player.setVolume(volume);
+    if (muted) {
+        player.mute();
+    } else {
+        player.unMute();
+    }
+}
+
+function setVolumeLevel(value) {
+    volume = Math.min(100, Math.max(0, Math.round(value)));
+    if (volume > 0) {
+        muted = false; // dragging the slider while muted unmutes
+        volumeBeforeSilence = volume;
+    }
+    applyVolume();
+    persistVolume();
+    updateVolumeUI();
+}
+
+function toggleMute() {
+    if (muted || volume === 0) {
+        muted = false;
+        if (volume === 0) volume = Math.max(volumeBeforeSilence, 40);
+    } else {
+        volumeBeforeSilence = volume;
+        muted = true;
+    }
+    applyVolume();
+    persistVolume();
+    updateVolumeUI();
+}
+
+function updateVolumeUI() {
+    const shown = muted ? 0 : volume;
+    const silent = muted || volume === 0;
+    volumeSlider.value = String(shown);
+    volumeSlider.style.setProperty("--fill", `${shown}%`);
+    volumeControl.classList.toggle("is-muted", silent);
+    volumeBtn.setAttribute("aria-label", silent ? "Unmute stream" : "Mute stream");
+}
+
 function updatePosterThumb(videoId) {
     if (!videoId) return;
     poster.style.backgroundImage =
@@ -107,9 +183,14 @@ function createPlayer(channel) {
 
     // The target element is an existing iframe, so the API attaches to it
     // instead of replacing it.
+    playerReady = false;
     player = new YT.Player("yt-player", {
         events: {
-            onReady: event => event.target.playVideo(),
+            onReady: event => {
+                playerReady = true;
+                applyVolume(); // fresh embed starts unmuted at 100 — restore preference
+                event.target.playVideo();
+            },
             onStateChange: onPlayerStateChange,
             onError: onPlayerError
         }
@@ -188,6 +269,7 @@ async function playChannel(index, shouldScroll = true) {
         if (player) {
             player.destroy();
             player = null;
+            playerReady = false;
         }
         videoShell.querySelector("iframe")?.remove();
         createPlayer(channel);
@@ -266,6 +348,8 @@ function updateStageLayout() {
     const leftover = window.innerWidth - window.innerHeight * (16 / 9);
     document.body.classList.toggle("stage-side", leftover >= 76);
     document.body.classList.toggle("stage-wide", leftover >= 208);
+    // Side dock too thin for a slider — collapse volume to a mute button.
+    document.body.classList.toggle("dock-narrow", leftover < 128);
 }
 
 function updatePlayState() {
@@ -303,6 +387,9 @@ poster.addEventListener("click", () => {
     playChannel(activeIndex, false);
 });
 
+volumeBtn.addEventListener("click", toggleMute);
+volumeSlider.addEventListener("input", () => setVolumeLevel(Number(volumeSlider.value)));
+
 document.addEventListener("scroll", updateRailFades, { capture: true, passive: true });
 window.addEventListener("resize", updateRailFades);
 window.addEventListener("resize", updateStageLayout);
@@ -333,6 +420,18 @@ document.addEventListener("keydown", event => {
             event.preventDefault();
             goNext();
             break;
+        case "ArrowUp":
+            event.preventDefault();
+            setVolumeLevel(volume + 5);
+            break;
+        case "ArrowDown":
+            event.preventDefault();
+            setVolumeLevel(volume - 5);
+            break;
+        case "m":
+        case "M":
+            toggleMute();
+            break;
     }
 });
 
@@ -342,7 +441,11 @@ renderRail();
 updateClock();
 setInterval(updateClock, 30000);
 updatePlayState();
+loadVolumeState();
+updateVolumeUI();
 updateStageLayout();
+// Volume needs the IFrame API — keep it hidden in fallback mode.
+ytApiPromise.then(YT => document.body.classList.toggle("api-ready", Boolean(YT)));
 if (document.fonts?.ready) {
     document.fonts.ready.then(updateRailFades); // chip widths settle after the font swap
 }

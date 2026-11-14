@@ -302,6 +302,8 @@ h1 {
 /* Channel strip pill */
 .rail {
     pointer-events: auto;
+    display: flex;
+    align-items: center;
     width: max-content;
     max-width: 100%;
     padding: 7px 9px;
@@ -316,6 +318,8 @@ h1 {
 }
 
 .rail-track {
+    flex: 1 1 auto;
+    min-width: 0; /* shrink under the volume control instead of pushing it out */
     display: flex;
     flex-wrap: nowrap;
     gap: 5px;
@@ -341,6 +345,110 @@ h1 {
 .rail.can-scroll-left.can-scroll-right .rail-track {
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 26px, #000 calc(100% - 26px), transparent);
     mask-image: linear-gradient(90deg, transparent, #000 26px, #000 calc(100% - 26px), transparent);
+}
+
+/* ── Volume control ──
+   Mute button + slim slider. Lives at the trailing end of the transport
+   pill in bottom mode and as a row above the play/pause button in the
+   desktop side dock. Hidden entirely when the IFrame API is unavailable
+   (the fallback iframe exposes no volume control). */
+.volume {
+    display: none;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+    padding-left: 9px;
+    margin-left: 2px;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+body.api-ready .volume {
+    display: flex;
+}
+
+.volume-btn {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--soft);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.volume-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--ink);
+}
+
+.volume-icon {
+    grid-area: 1 / 1;
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+    transition: opacity 0.15s ease, transform 0.2s ease;
+}
+
+.volume-x {
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+.volume:not(.is-muted) .volume-icon-muted {
+    opacity: 0;
+    transform: scale(0.5);
+}
+
+.volume.is-muted .volume-icon-high {
+    opacity: 0;
+    transform: scale(0.5);
+}
+
+.volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 0 0 auto;
+    width: 76px;
+    height: 4px;
+    margin: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--mint) var(--fill, 100%), rgba(255, 255, 255, 0.22) var(--fill, 100%));
+    outline: none;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.volume-slider:focus-visible {
+    box-shadow: 0 0 0 2px rgba(66, 214, 164, 0.5);
+}
+
+@media (max-width: 380px) {
+    .volume-slider {
+        width: 56px;
+    }
 }
 
 /* Dock footer play/pause (desktop side-dock only) */
@@ -518,6 +626,42 @@ h1 {
     body.stage-side .rail-play {
         display: grid;
         place-items: center;
+    }
+
+    /* Side dock: volume sits between the channel list and play/pause. */
+    body.stage-side .volume {
+        width: 100%;
+        max-width: 320px;
+        margin: 0 auto;
+        padding: 12px 0 0;
+        border-left: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    body.stage-side .volume-slider {
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 0;
+    }
+
+    /* Dock too thin for a slider — mute button spans the strip instead. */
+    body.stage-side.dock-narrow .volume {
+        gap: 0;
+        padding: 10px 0 0;
+    }
+
+    body.stage-side.dock-narrow .volume-slider {
+        display: none;
+    }
+
+    body.stage-side.dock-narrow .volume-btn {
+        flex: 1 1 auto;
+        width: auto;
+        height: auto;
+        min-height: 36px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.07);
     }
 
     body.stage-side .rail-track::before {
